@@ -1,8 +1,16 @@
 const { Pool } = require("pg");
 
 const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL;
+function normalizeConnectionString(value) {
+  if (!value) return value;
+  const url = new URL(value);
+  url.searchParams.delete("sslmode");
+  url.searchParams.delete("pgbouncer");
+  return url.toString();
+}
+
 const connectionConfig = connectionString ? {
-  connectionString,
+  connectionString: normalizeConnectionString(connectionString),
   max: 1,
   ssl: { rejectUnauthorized: false }
 } : process.env.POSTGRES_HOST ? {
