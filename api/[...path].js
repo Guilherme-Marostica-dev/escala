@@ -1,6 +1,6 @@
 const { Pool } = require("pg");
 
-const connectionString = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+const connectionString = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.POSTGRES_PRISMA_URL;
 const pool = connectionString ? new Pool({
   connectionString,
   max: 1,
@@ -42,7 +42,11 @@ function employeeFromRow(row) {
 
 module.exports = async function handler(request, response) {
   try {
-    if (request.url.startsWith("/api/health")) return response.status(200).json({ status: "ok" });
+    if (request.url.startsWith("/api/health")) {
+      if (!pool) return response.status(503).json({ status: "error", databaseConfigured: false });
+      await pool.query("SELECT 1");
+      return response.status(200).json({ status: "ok", databaseConfigured: true });
+    }
     await ensureSchema();
 
     if (request.url.startsWith("/api/employees") && request.method === "GET") {
@@ -93,7 +97,7 @@ module.exports = async function handler(request, response) {
 
     return response.status(404).json({ error: "Rota não encontrada." });
   } catch (error) {
-    console.error(error);
+    console.error("Database API error:", error);
     return response.status(500).json({ error: "Banco de produção não configurado ou indisponível." });
   }
 };
