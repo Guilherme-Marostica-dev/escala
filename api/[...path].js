@@ -57,21 +57,32 @@ function employeeFromRow(row) {
   return { id: row.id, name: row.name, shift: row.shift, vacationStart: row.vacation_start, vacationEnd: row.vacation_end };
 }
 
+function getApiPath(request) {
+  const requestPath = (request.url || "").split("?")[0];
+  if (requestPath.includes("/api/")) return requestPath.slice(requestPath.indexOf("/api/"));
+
+  const pathParameter = request.query?.path;
+  if (Array.isArray(pathParameter)) return `/api/${pathParameter.join("/")}`;
+  if (typeof pathParameter === "string") return `/api/${pathParameter}`;
+  return requestPath || "/";
+}
+
 module.exports = async function handler(request, response) {
   try {
-    if (request.url.startsWith("/api/health")) {
+    const apiPath = getApiPath(request);
+    if (apiPath.startsWith("/api/health")) {
       if (!pool) return response.status(503).json({ status: "error", databaseConfigured: false });
       await pool.query("SELECT 1");
       return response.status(200).json({ status: "ok", databaseConfigured: true });
     }
     await ensureSchema();
 
-    if (request.url.startsWith("/api/employees") && request.method === "GET") {
+    if (apiPath.startsWith("/api/employees") && request.method === "GET") {
       const { rows } = await pool.query("SELECT * FROM employees ORDER BY id");
       return response.status(200).json(rows.map(employeeFromRow));
     }
 
-    if (request.url.startsWith("/api/employees") && request.method === "PUT") {
+    if (apiPath.startsWith("/api/employees") && request.method === "PUT") {
       const employees = Array.isArray(request.body) ? request.body : [];
       const error = employees.map(validateEmployee).find(Boolean);
       if (error) return response.status(400).json({ error });
@@ -96,13 +107,13 @@ module.exports = async function handler(request, response) {
       return response.status(200).json(employees);
     }
 
-    if (request.url.startsWith("/api/calendar") && request.method === "GET") {
+    if (apiPath.startsWith("/api/calendar") && request.method === "GET") {
       const { rows } = await pool.query("SELECT assignments_json, month FROM calendar_state WHERE id = 1");
       if (rows.length === 0) return response.status(200).json({ assignments: {}, month: "" });
       return response.status(200).json({ assignments: JSON.parse(rows[0].assignments_json), month: rows[0].month });
     }
 
-    if (request.url.startsWith("/api/calendar") && request.method === "PUT") {
+    if (apiPath.startsWith("/api/calendar") && request.method === "PUT") {
       const assignments = request.body?.assignments && typeof request.body.assignments === "object" ? request.body.assignments : {};
       const month = typeof request.body?.month === "string" ? request.body.month : "";
       await pool.query(
