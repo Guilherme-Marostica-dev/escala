@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interaktiver Schichtkalender für Mitarbeiter">
+  <title>Schichtkalender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="calendar.css">
+</head>
+<body>
+  <main class="calendar-page">
+    <header class="calendar-topbar">
+      <a class="back-link" href="index.html">← Mitarbeiter</a>
+      <div class="page-title">
+        <p class="eyebrow">Planung</p>
+        <h1>Schichtkalender</h1>
+      </div>
+      <div id="employee-summary" class="employee-summary">0 Mitarbeiter</div>
+    </header>
+
+    <section class="calendar-panel" aria-label="Monatskalender">
+      <div class="calendar-toolbar">
+        <button id="previous-month" class="month-button" type="button" aria-label="Vorheriger Monat">←</button>
+        <h2 id="month-label"></h2>
+        <button id="next-month" class="month-button" type="button" aria-label="Nächster Monat">→</button>
+        <button id="today-button" class="today-button" type="button">Heute</button>
+        <button id="auto-plan-button" class="auto-plan-button" type="button">Automatisch planen</button>
+        <button id="print-button" class="print-button" type="button">Als PDF exportieren</button>
+      </div>
+
+      <div id="employee-warning" class="employee-warning" hidden>
+        Keine Mitarbeiter empfangen. Gehen Sie zurück zur Registrierung, fügen Sie Namen hinzu und öffnen Sie den Kalender erneut.
+      </div>
+
+      <div class="weekday-row" aria-hidden="true">
+        <span>So</span><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span>
+      </div>
+      <div id="calendar-grid" class="calendar-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <script src="database.js"></script>
+  <script src="calendar.js"></script>
+</body>
+</html>

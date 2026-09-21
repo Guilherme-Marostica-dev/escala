@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cadastro simples de funcionários">
+  <title>Cadastro de Funcionários</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="intro" aria-labelledby="page-title">
+      <div class="brand-mark" aria-hidden="true">E</div>
+      <p class="eyebrow">Painel administrativo</p>
+      <h1 id="page-title">Cadastro de<br><span>funcionários</span></h1>
+      <p class="intro-copy">Mantenha sua equipe organizada em um só lugar.</p>
+      <div class="accent-line" aria-hidden="true"></div>
+    </section>
+
+    <section class="content-panel" aria-label="Gerenciar funcionários">
+      <div class="panel-header">
+        <div>
+          <p class="section-label">Equipe</p>
+          <h2>Funcionários cadastrados</h2>
+        </div>
+        <div class="header-actions">
+          <div class="count-badge" aria-live="polite"><span id="employee-count">0</span> ativos</div>
+          <a id="calendar-link" class="calendar-link" href="calendar.html">Calendário</a>
+          <button id="export-button" class="export-button" type="button" disabled>
+            <span aria-hidden="true">↓</span> Exportar JSON
+          </button>
+        </div>
+      </div>
+
+      <form id="employee-form" class="employee-form">
+        <div class="field-group">
+          <label for="employee-name">Nome do funcionário</label>
+          <input id="employee-name" name="name" type="text" placeholder="Digite o nome completo" autocomplete="off" maxlength="100" required>
+        </div>
+        <div class="field-group">
+          <label for="employee-shift">Horário de preferência <span>(opcional)</span></label>
+          <select id="employee-shift" name="shift">
+            <option value="">Sem preferência</option>
+            <option value="Frühschicht">Frühschicht</option>
+            <option value="Spätschicht">Spätschicht</option>
+            <option value="Nachtdienst">Nachtdienst</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="vacation-start">Férias: início <span>(opcional)</span></label>
+          <input id="vacation-start" name="vacationStart" type="date">
+        </div>
+        <div class="field-group">
+          <label for="vacation-end">Férias: fim <span>(opcional)</span></label>
+          <input id="vacation-end" name="vacationEnd" type="date">
+        </div>
+        <button class="primary-button" type="submit">
+          <span id="submit-label">Adicionar</span>
+          <span class="button-icon" aria-hidden="true">+</span>
+        </button>
+        <button id="cancel-button" class="cancel-button" type="button" hidden>Cancelar</button>
+      </form>
+
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon" aria-hidden="true">☰</div>
+        <p>Nenhum funcionário cadastrado.</p>
+        <span>Use o campo acima para adicionar o primeiro nome.</span>
+      </div>
+
+      <div id="employee-list" class="employee-list" hidden>
+        <div class="list-heading" aria-hidden="true">
+          <span>Nome</span>
+          <span>Ações</span>
+        </div>
+        <ul id="employee-items"></ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="database.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
