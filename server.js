@@ -1,3 +1,6 @@
+if (process.env.VERCEL) {
+  module.exports = require("./api/[...path].js");
+} else {
 const path = require("node:path");
 const fs = require("node:fs");
 const { DatabaseSync } = require("node:sqlite");
@@ -83,3 +86,4 @@ app.put("/api/calendar", (request, response) => {
 app.get("/api/health", (request, response) => response.json({ status: "ok" }));
 
 app.listen(port, () => console.log(`Escala disponível em http://localhost:${port}`));
+}
