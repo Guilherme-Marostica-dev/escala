@@ -8,9 +8,11 @@
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "build": "node --check server.js && node --check database.js && node --check script.js && node --check calendar.js"
   },
   "dependencies": {
+    "@vercel/postgres": "^0.10.0",
     "express": "^5.1.0"
   }
 }
