@@ -12,7 +12,7 @@
     "build": "node --check server.js && node --check database.js && node --check script.js && node --check calendar.js"
   },
   "dependencies": {
-    "@vercel/postgres": "^0.10.0",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
   }
 }

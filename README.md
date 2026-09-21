@@ -15,10 +15,10 @@ O banco é criado automaticamente em `data/escala.sqlite`. Para produção, use 
 
 ## Deploy no Vercel
 
-O Vercel usa a função serverless em `api/[...path].js` e um banco Postgres externo. No projeto Vercel:
+O Vercel usa a função serverless em `api/[...path].js` e um banco Postgres externo, incluindo Supabase. No projeto Vercel:
 
-1. Crie um banco Postgres pela integração do Vercel Marketplace.
-2. Confirme que a variável `POSTGRES_URL` foi adicionada aos ambientes `Production`, `Preview` e `Development`.
+1. Crie um projeto Supabase ou um banco Postgres pela integração do Vercel Marketplace.
+2. Configure `POSTGRES_URL_NON_POOLING` ou `POSTGRES_URL` com a string de conexão PostgreSQL nos ambientes `Production`, `Preview` e `Development`.
 3. Faça o deploy novamente.
 
 O schema (`employees` e `calendar_state`) é criado automaticamente na primeira chamada da API. O arquivo SQLite local não é usado no Vercel, porque o filesystem de funções serverless não é persistente.

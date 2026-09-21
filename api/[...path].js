@@ -1,22 +1,30 @@
-const { sql } = require("@vercel/postgres");
+const { Pool } = require("pg");
+
+const connectionString = process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
+const pool = connectionString ? new Pool({
+  connectionString,
+  max: 1,
+  ssl: { rejectUnauthorized: false }
+}) : null;
 
 let schemaReady;
 
 async function ensureSchema() {
   if (!schemaReady) {
+    if (!pool) throw new Error("POSTGRES_URL não configurada.");
     schemaReady = Promise.all([
-      sql`CREATE TABLE IF NOT EXISTS employees (
+      pool.query(`CREATE TABLE IF NOT EXISTS employees (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
         shift TEXT NOT NULL DEFAULT '',
         vacation_start TEXT NOT NULL DEFAULT '',
         vacation_end TEXT NOT NULL DEFAULT ''
-      )`,
-      sql`CREATE TABLE IF NOT EXISTS calendar_state (
+      )`),
+      pool.query(`CREATE TABLE IF NOT EXISTS calendar_state (
         id INTEGER PRIMARY KEY,
         assignments_json TEXT NOT NULL DEFAULT '{}',
         month TEXT NOT NULL DEFAULT ''
-      )`
+      )`)
     ]);
   }
   await schemaReady;
@@ -38,7 +46,7 @@ module.exports = async function handler(request, response) {
     await ensureSchema();
 
     if (request.url.startsWith("/api/employees") && request.method === "GET") {
-      const { rows } = await sql`SELECT * FROM employees ORDER BY id`;
+      const { rows } = await pool.query("SELECT * FROM employees ORDER BY id");
       return response.status(200).json(rows.map(employeeFromRow));
     }
 
@@ -47,16 +55,28 @@ module.exports = async function handler(request, response) {
       const error = employees.map(validateEmployee).find(Boolean);
       if (error) return response.status(400).json({ error });
 
-      await sql`DELETE FROM employees`;
-      for (const employee of employees) {
-        await sql`INSERT INTO employees (id, name, shift, vacation_start, vacation_end)
-          VALUES (${employee.id}, ${employee.name.trim()}, ${employee.shift || ""}, ${employee.vacationStart || ""}, ${employee.vacationEnd || ""})`;
+      const client = await pool.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query("DELETE FROM employees");
+        for (const employee of employees) {
+          await client.query(
+            "INSERT INTO employees (id, name, shift, vacation_start, vacation_end) VALUES ($1, $2, $3, $4, $5)",
+            [employee.id, employee.name.trim(), employee.shift || "", employee.vacationStart || "", employee.vacationEnd || ""]
+          );
+        }
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally {
+        client.release();
       }
       return response.status(200).json(employees);
     }
 
     if (request.url.startsWith("/api/calendar") && request.method === "GET") {
-      const { rows } = await sql`SELECT assignments_json, month FROM calendar_state WHERE id = 1`;
+      const { rows } = await pool.query("SELECT assignments_json, month FROM calendar_state WHERE id = 1");
       if (rows.length === 0) return response.status(200).json({ assignments: {}, month: "" });
       return response.status(200).json({ assignments: JSON.parse(rows[0].assignments_json), month: rows[0].month });
     }
@@ -64,8 +84,10 @@ module.exports = async function handler(request, response) {
     if (request.url.startsWith("/api/calendar") && request.method === "PUT") {
       const assignments = request.body?.assignments && typeof request.body.assignments === "object" ? request.body.assignments : {};
       const month = typeof request.body?.month === "string" ? request.body.month : "";
-      await sql`INSERT INTO calendar_state (id, assignments_json, month) VALUES (1, ${JSON.stringify(assignments)}, ${month})
-        ON CONFLICT(id) DO UPDATE SET assignments_json = EXCLUDED.assignments_json, month = EXCLUDED.month`;
+      await pool.query(
+        "INSERT INTO calendar_state (id, assignments_json, month) VALUES (1, $1, $2) ON CONFLICT(id) DO UPDATE SET assignments_json = EXCLUDED.assignments_json, month = EXCLUDED.month",
+        [JSON.stringify(assignments), month]
+      );
       return response.status(200).json({ assignments, month });
     }
 
